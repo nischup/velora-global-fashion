@@ -1,8 +1,11 @@
+export type UserRole = 'admin' | 'staff' | 'customer';
+
 export type User = {
     id: number;
     name: string;
     email: string;
     avatar?: string;
+    role?: UserRole;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
     created_at: string;
@@ -11,8 +14,12 @@ export type User = {
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
 };
+
+export function canManageCatalog(user?: User | null): boolean {
+    return user?.role === 'admin' || user?.role === 'staff';
+}
 
 export type Passkey = {
     id: number;

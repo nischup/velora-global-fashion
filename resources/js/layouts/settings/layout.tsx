@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import { AccountNav } from '@/components/account-nav';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -8,7 +9,7 @@ import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import type { NavItem } from '@/types';
+import { canManageCatalog, type NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -30,9 +31,16 @@ const sidebarNavItems: NavItem[] = [
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const { auth } = usePage().props;
+    const customer = !canManageCatalog(auth.user);
 
     return (
-        <div className="px-4 py-6">
+        <div className={customer ? 'mx-auto max-w-6xl px-4 py-10' : 'px-4 py-6'}>
+            {customer && (
+                <div className="mb-8">
+                    <AccountNav />
+                </div>
+            )}
             <Heading
                 title="Settings"
                 description="Manage your profile and account settings"

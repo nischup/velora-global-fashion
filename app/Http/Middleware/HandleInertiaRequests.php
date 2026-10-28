@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Category;
+use App\Services\CartService;
+use App\Services\WishlistService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,11 +38,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $cart = app(CartService::class);
+        $wishlistIds = app(WishlistService::class)->ids($request);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+            ],
+            'storefront' => [
+                'categories' => Category::query()
+                    ->active()
+                    ->roots()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'slug']),
+                'cart_count' => $cart->count($request),
+                'wishlist_count' => count($wishlistIds),
+                'wishlist_ids' => $wishlistIds,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
