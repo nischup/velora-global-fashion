@@ -132,11 +132,23 @@ export default function CartPage({ items, subtotal }: Props) {
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <p>
-                                                    {formatPrice(
-                                                        item.line_total,
-                                                    )}
-                                                </p>
+                                                <div className="text-right">
+                                                    <p>
+                                                        {formatPrice(
+                                                            item.line_total,
+                                                        )}
+                                                    </p>
+                                                    {item.compare_at_price &&
+                                                    item.compare_at_price >
+                                                        item.price ? (
+                                                        <p className="text-xs text-muted-foreground line-through">
+                                                            {formatPrice(
+                                                                item.compare_at_price *
+                                                                    item.quantity,
+                                                            )}
+                                                        </p>
+                                                    ) : null}
+                                                </div>
                                                 <button
                                                     type="button"
                                                     aria-label="Remove item"

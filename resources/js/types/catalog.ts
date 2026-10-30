@@ -49,6 +49,7 @@ export type StorefrontVariant = {
     sku: string;
     price: number;
     compare_at_price: number | null;
+    sale_percent: number | null;
     stock: number;
     in_stock: boolean;
     is_low_stock: boolean;
@@ -66,6 +67,8 @@ export type ProductCard = {
     image_url: string | null;
     min_price: number;
     max_price: number;
+    compare_at_price: number | null;
+    sale_percent: number | null;
     in_stock: boolean;
     is_featured: boolean;
 };
@@ -94,6 +97,7 @@ export type ProductDetail = {
 export type AdminVariant = {
     id: number;
     sku: string;
+    barcode: string | null;
     price: number;
     compare_at_price: number | null;
     stock: number;
@@ -120,6 +124,18 @@ export type AdminProduct = {
     brand_id: number | null;
     images: CatalogImage[];
     variants: AdminVariant[];
+};
+
+export type AdminBarcodeVariant = {
+    id: number;
+    sku: string;
+    barcode: string | null;
+    price: number;
+    label: string;
+    product_id: number;
+    product_name: string;
+    brand: string | null;
+    barcode_svg?: string;
 };
 
 export type AdminProductListItem = {

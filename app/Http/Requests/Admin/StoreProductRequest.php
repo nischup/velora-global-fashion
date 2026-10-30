@@ -28,7 +28,8 @@ class StoreProductRequest extends FormRequest
             'images' => ['nullable', 'array', 'max:8'],
             'images.*' => ['image', 'max:5120'],
             'variants' => ['required_if:status,live', 'array'],
-            'variants.*.sku' => ['required_with:variants', 'string', 'max:100', 'distinct', 'unique:product_variants,sku'],
+            'variants.*.sku' => ['nullable', 'string', 'max:100', 'distinct', 'unique:product_variants,sku'],
+            'variants.*.barcode' => ['nullable', 'string', 'max:64', 'distinct', 'unique:product_variants,barcode'],
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
             'variants.*.compare_at_price' => ['nullable', 'numeric', 'min:0'],
             'variants.*.stock' => ['required_with:variants', 'integer', 'min:0'],
@@ -39,10 +40,33 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'variants.required_if' => 'Add at least one variant (price, size, and color) to publish this product.',
+            'variants.*.price.required_with' => 'Enter a price for each variant.',
+            'variants.*.size_id.required_with' => 'Choose a size for each variant.',
+            'variants.*.color_id.required_with' => 'Choose a color for each variant.',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
         $variants = $this->collect('variants')
-            ->filter(fn (mixed $variant): bool => filled(data_get($variant, 'sku')))
+            ->map(function (mixed $variant): array {
+                $row = is_array($variant) ? $variant : [];
+                $row['sku'] = filled($row['sku'] ?? null) ? $row['sku'] : null;
+                $row['barcode'] = filled($row['barcode'] ?? null) ? $row['barcode'] : null;
+
+                return $row;
+            })
+            ->filter(fn (array $variant): bool => filled($variant['sku'] ?? null)
+                || filled($variant['price'] ?? null)
+                || filled($variant['size_id'] ?? null)
+                || filled($variant['color_id'] ?? null))
             ->values()
             ->all();
 

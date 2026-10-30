@@ -1,9 +1,11 @@
 import { Head, useForm } from '@inertiajs/react';
 import Heading from '@/components/heading';
+import ImageUploadField from '@/components/image-upload-field';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
 import { create, index, store } from '@/routes/admin/products';
@@ -11,6 +13,7 @@ import type { AttributeValue, BrandSummary, CategoryOption } from '@/types';
 
 type VariantRow = {
     sku: string;
+    barcode: string;
     price: string;
     stock: string;
     size_id: string;
@@ -26,6 +29,7 @@ type Props = {
 
 const emptyVariant = (): VariantRow => ({
     sku: '',
+    barcode: '',
     price: '',
     stock: '0',
     size_id: '',
@@ -66,6 +70,20 @@ export default function AdminProductsCreate({
                     }}
                     className="space-y-6 rounded-xl border p-6"
                 >
+                    {Object.keys(form.errors).length > 0 && (
+                        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                            <p className="font-medium">
+                                Could not create this product.
+                            </p>
+                            <ul className="mt-1 list-disc pl-4">
+                                {Object.entries(form.errors).map(
+                                    ([field, message]) => (
+                                        <li key={field}>{message}</li>
+                                    ),
+                                )}
+                            </ul>
+                        </div>
+                    )}
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
@@ -73,10 +91,12 @@ export default function AdminProductsCreate({
                                 id="name"
                                 value={form.data.name}
                                 onChange={(event) => {
-                                    form.setData('name', event.target.value);
-                                    if (!form.data.slug) {
-                                        form.setData('slug', slugify(event.target.value));
-                                    }
+                                    const name = event.target.value;
+                                    form.setData({
+                                        ...form.data,
+                                        name,
+                                        slug: form.data.slug || slugify(name),
+                                    });
                                 }}
                                 required
                             />
@@ -91,6 +111,7 @@ export default function AdminProductsCreate({
                                     form.setData('slug', event.target.value)
                                 }
                             />
+                            <InputError message={form.errors.slug} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="category_id">Category</Label>
@@ -178,21 +199,12 @@ export default function AdminProductsCreate({
                             Featured
                         </label>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="images">Images</Label>
-                        <Input
-                            id="images"
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={(event) =>
-                                form.setData(
-                                    'images',
-                                    Array.from(event.target.files ?? []),
-                                )
-                            }
-                        />
-                    </div>
+                    <ImageUploadField
+                        files={form.data.images}
+                        onChange={(images) => form.setData('images', images)}
+                        uploading={form.processing && form.data.images.length > 0}
+                        error={form.errors.images}
+                    />
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <Label>Variants</Label>
@@ -213,91 +225,176 @@ export default function AdminProductsCreate({
                         {form.data.variants.map((variant, index) => (
                             <div
                                 key={index}
-                                className="grid gap-2 rounded-lg border p-3 md:grid-cols-5"
+                                className="grid gap-2 rounded-lg border p-3 md:grid-cols-6"
                             >
-                                <Input
-                                    placeholder="SKU"
-                                    value={variant.sku}
-                                    onChange={(event) => {
-                                        const variants = [...form.data.variants];
-                                        variants[index] = {
-                                            ...variant,
-                                            sku: event.target.value,
-                                        };
-                                        form.setData('variants', variants);
-                                    }}
-                                />
-                                <Input
-                                    placeholder="Price"
-                                    type="number"
-                                    min={0}
-                                    value={variant.price}
-                                    onChange={(event) => {
-                                        const variants = [...form.data.variants];
-                                        variants[index] = {
-                                            ...variant,
-                                            price: event.target.value,
-                                        };
-                                        form.setData('variants', variants);
-                                    }}
-                                />
-                                <Input
-                                    placeholder="Stock"
-                                    type="number"
-                                    min={0}
-                                    value={variant.stock}
-                                    onChange={(event) => {
-                                        const variants = [...form.data.variants];
-                                        variants[index] = {
-                                            ...variant,
-                                            stock: event.target.value,
-                                        };
-                                        form.setData('variants', variants);
-                                    }}
-                                />
-                                <select
-                                    value={variant.size_id}
-                                    onChange={(event) => {
-                                        const variants = [...form.data.variants];
-                                        variants[index] = {
-                                            ...variant,
-                                            size_id: event.target.value,
-                                        };
-                                        form.setData('variants', variants);
-                                    }}
-                                    className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
-                                >
-                                    <option value="">Size</option>
-                                    {sizes.map((size) => (
-                                        <option key={size.id} value={size.id}>
-                                            {size.value}
-                                        </option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={variant.color_id}
-                                    onChange={(event) => {
-                                        const variants = [...form.data.variants];
-                                        variants[index] = {
-                                            ...variant,
-                                            color_id: event.target.value,
-                                        };
-                                        form.setData('variants', variants);
-                                    }}
-                                    className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
-                                >
-                                    <option value="">Color</option>
-                                    {colors.map((color) => (
-                                        <option key={color.id} value={color.id}>
-                                            {color.value}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="grid gap-1">
+                                    <Input
+                                        placeholder="SKU (auto)"
+                                        value={variant.sku}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                sku: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                    />
+                                    <InputError
+                                        message={
+                                            form.errors[`variants.${index}.sku`]
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-1">
+                                    <Input
+                                        placeholder="Barcode (auto)"
+                                        value={variant.barcode}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                barcode: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                    />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `variants.${index}.barcode`
+                                            ]
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-1">
+                                    <Input
+                                        placeholder="Price"
+                                        type="number"
+                                        min={0}
+                                        value={variant.price}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                price: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                    />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `variants.${index}.price`
+                                            ]
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-1">
+                                    <Input
+                                        placeholder="Stock"
+                                        type="number"
+                                        min={0}
+                                        value={variant.stock}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                stock: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                    />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `variants.${index}.stock`
+                                            ]
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-1">
+                                    <select
+                                        value={variant.size_id}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                size_id: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
+                                    >
+                                        <option value="">Size</option>
+                                        {sizes.map((size) => (
+                                            <option
+                                                key={size.id}
+                                                value={size.id}
+                                            >
+                                                {size.value}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `variants.${index}.size_id`
+                                            ]
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-1">
+                                    <select
+                                        value={variant.color_id}
+                                        onChange={(event) => {
+                                            const variants = [
+                                                ...form.data.variants,
+                                            ];
+                                            variants[index] = {
+                                                ...variant,
+                                                color_id: event.target.value,
+                                            };
+                                            form.setData('variants', variants);
+                                        }}
+                                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
+                                    >
+                                        <option value="">Color</option>
+                                        {colors.map((color) => (
+                                            <option
+                                                key={color.id}
+                                                value={color.id}
+                                            >
+                                                {color.value}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `variants.${index}.color_id`
+                                            ]
+                                        }
+                                    />
+                                </div>
                             </div>
                         ))}
                         <InputError message={form.errors.variants} />
                     </div>
-                    <Button disabled={form.processing}>Create product</Button>
+                    <Button disabled={form.processing}>
+                        {form.processing && <Spinner />}
+                        Create product
+                    </Button>
                 </form>
             </div>
         </>

@@ -17,6 +17,11 @@ declare module '@inertiajs/core' {
                 cart_count: number;
                 wishlist_count: number;
                 wishlist_ids: number[];
+                active_sale: {
+                    name: string;
+                    percent: number;
+                    applies_to: 'all' | 'selected';
+                } | null;
             };
             [key: string]: unknown;
         };

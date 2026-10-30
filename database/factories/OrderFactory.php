@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
@@ -23,9 +24,14 @@ class OrderFactory extends Factory
             'user_id' => User::factory(),
             'number' => Order::generateNumber(),
             'status' => OrderStatus::Pending,
+            'source' => OrderSource::Online,
             'subtotal' => $subtotal,
             'shipping_amount' => 0,
+            'discount_amount' => 0,
+            'tax_rate' => 0,
+            'tax_amount' => 0,
             'total' => $subtotal,
+            'refunded_amount' => 0,
             'shipping_name' => fake()->name(),
             'shipping_phone' => '01'.fake()->numerify('#########'),
             'shipping_address' => fake()->streetAddress(),

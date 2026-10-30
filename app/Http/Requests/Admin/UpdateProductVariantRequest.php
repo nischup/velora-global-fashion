@@ -21,6 +21,7 @@ class UpdateProductVariantRequest extends FormRequest
 
         return [
             'sku' => ['required', 'string', 'max:100', Rule::unique('product_variants', 'sku')->ignore($variant)],
+            'barcode' => ['nullable', 'string', 'max:64', Rule::unique('product_variants', 'barcode')->ignore($variant)],
             'price' => ['required', 'numeric', 'min:0'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],

@@ -1,11 +1,15 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    AuthBrandLayout,
+    authFieldClass,
+    authLabelClass,
+} from '@/layouts/auth/auth-brand-layout';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
@@ -15,19 +19,34 @@ type Props = {
 
 export default function Register({ passwordRules }: Props) {
     return (
-        <>
-            <Head title="Register" />
-            <Form
-                {...store.form()}
-                resetOnSuccess={['password', 'password_confirmation']}
-                disableWhileProcessing
-                className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
+        <AuthBrandLayout
+            title="Register"
+            heading="Join the house"
+            description="Create an account to shop considered pieces, save favourites, and follow your orders — clothing made to last."
+        >
+            <div className="rounded-3xl border border-velora-gold/30 bg-velora-ivory p-6 shadow-[0_24px_60px_rgba(13,59,46,0.08)] sm:p-8">
+                <p className="text-[11px] tracking-[0.22em] text-velora-gold uppercase">
+                    Membership
+                </p>
+                <h2 className="mt-2 text-2xl tracking-tight">
+                    Create an account
+                </h2>
+                <p className="mt-1 text-sm text-velora-forest/65">
+                    Enter your details below to join the house.
+                </p>
+
+                <Form
+                    {...store.form()}
+                    resetOnSuccess={['password', 'password_confirmation']}
+                    disableWhileProcessing
+                    className="mt-8 flex flex-col gap-5"
+                >
+                    {({ processing, errors }) => (
+                        <>
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name" className={authLabelClass}>
+                                    Name
+                                </Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -37,6 +56,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="name"
                                     name="name"
                                     placeholder="Full name"
+                                    className={authFieldClass}
                                 />
                                 <InputError
                                     message={errors.name}
@@ -45,7 +65,12 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label
+                                    htmlFor="email"
+                                    className={authLabelClass}
+                                >
+                                    Email address
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -54,12 +79,18 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="email"
                                     name="email"
                                     placeholder="email@example.com"
+                                    className={authFieldClass}
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label
+                                    htmlFor="password"
+                                    className={authLabelClass}
+                                >
+                                    Password
+                                </Label>
                                 <PasswordInput
                                     id="password"
                                     required
@@ -68,12 +99,16 @@ export default function Register({ passwordRules }: Props) {
                                     name="password"
                                     placeholder="Password"
                                     passwordrules={passwordRules}
+                                    className={authFieldClass}
                                 />
                                 <InputError message={errors.password} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
+                                <Label
+                                    htmlFor="password_confirmation"
+                                    className={authLabelClass}
+                                >
                                     Confirm password
                                 </Label>
                                 <PasswordInput
@@ -84,6 +119,7 @@ export default function Register({ passwordRules }: Props) {
                                     name="password_confirmation"
                                     placeholder="Confirm password"
                                     passwordrules={passwordRules}
+                                    className={authFieldClass}
                                 />
                                 <InputError
                                     message={errors.password_confirmation}
@@ -92,29 +128,28 @@ export default function Register({ passwordRules }: Props) {
 
                             <Button
                                 type="submit"
-                                className="mt-2 w-full"
+                                className="mt-2 h-11 w-full bg-velora-green text-velora-cream hover:bg-velora-forest"
                                 tabIndex={5}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
                                 Create account
                             </Button>
-                        </div>
+                        </>
+                    )}
+                </Form>
+            </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
-                                Log in
-                            </TextLink>
-                        </div>
-                    </>
-                )}
-            </Form>
-        </>
+            <p className="mt-6 text-center text-sm text-velora-forest/70">
+                Already have an account?{' '}
+                <Link
+                    href={login()}
+                    tabIndex={6}
+                    className="font-medium text-velora-green underline decoration-velora-gold/50 underline-offset-4 hover:text-velora-gold"
+                >
+                    Log in
+                </Link>
+            </p>
+        </AuthBrandLayout>
     );
 }
-
-Register.layout = {
-    title: 'Create an account',
-    description: 'Enter your details below to create your account',
-};

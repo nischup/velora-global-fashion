@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $variant_label
  * @property numeric-string $unit_price
  * @property int $quantity
+ * @property int $returned_quantity
+ * @property numeric-string $discount_amount
  * @property numeric-string $line_total
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -35,6 +37,8 @@ use Illuminate\Support\Carbon;
     'variant_label',
     'unit_price',
     'quantity',
+    'returned_quantity',
+    'discount_amount',
     'line_total',
 ])]
 class OrderItem extends Model
@@ -50,7 +54,9 @@ class OrderItem extends Model
         return [
             'unit_price' => 'decimal:2',
             'line_total' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'quantity' => 'integer',
+            'returned_quantity' => 'integer',
         ];
     }
 
@@ -81,6 +87,14 @@ class OrderItem extends Model
     /**
      * @return array<string, mixed>
      */
+    public function returnableQuantity(): int
+    {
+        return max($this->quantity - $this->returned_quantity, 0);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toFrontendArray(): array
     {
         return [
@@ -91,6 +105,9 @@ class OrderItem extends Model
             'variant_label' => $this->variant_label,
             'unit_price' => (float) $this->unit_price,
             'quantity' => $this->quantity,
+            'returned_quantity' => $this->returned_quantity,
+            'discount_amount' => (float) $this->discount_amount,
+            'returnable_quantity' => $this->returnableQuantity(),
             'line_total' => (float) $this->line_total,
             'product_slug' => $this->product?->slug,
             'image_url' => $this->product?->coverImageUrl(),

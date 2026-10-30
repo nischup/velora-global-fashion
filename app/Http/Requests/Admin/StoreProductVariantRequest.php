@@ -15,7 +15,8 @@ class StoreProductVariantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sku' => ['required', 'string', 'max:100', 'unique:product_variants,sku'],
+            'sku' => ['nullable', 'string', 'max:100', 'unique:product_variants,sku'],
+            'barcode' => ['nullable', 'string', 'max:64', 'unique:product_variants,barcode'],
             'price' => ['required', 'numeric', 'min:0'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],

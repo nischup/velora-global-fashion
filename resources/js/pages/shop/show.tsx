@@ -117,6 +117,9 @@ export default function ShopShow({ product, options, related }: Props) {
                                         {formatPrice(selected.compare_at_price)}
                                     </p>
                                 )}
+                            {selected.sale_percent ? (
+                                <Badge>{selected.sale_percent}% off</Badge>
+                            ) : null}
                             {!selected.in_stock && (
                                 <Badge variant="secondary">Sold out</Badge>
                             )}

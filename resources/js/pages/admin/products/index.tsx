@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import Heading from '@/components/heading';
+import { PageLoadingModal, usePageLoader } from '@/components/page-loading-modal';
 import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +12,12 @@ import { FormEvent } from 'react';
 
 type Props = {
     products: Paginated<AdminProductListItem>;
-    filters: { q: string; status: string };
+    filters: { q: string; status: string; stock: string };
 };
 
 export default function AdminProductsIndex({ products, filters }: Props) {
+    const { loading, showLoader } = usePageLoader();
+
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -26,7 +29,13 @@ export default function AdminProductsIndex({ products, filters }: Props) {
             }
         }
 
-        router.get(index.url(), query, { preserveState: true, replace: true });
+        const hideLoader = showLoader();
+
+        router.get(index.url(), query, {
+            preserveState: true,
+            replace: true,
+            onFinish: hideLoader,
+        });
     };
 
     return (
@@ -59,7 +68,15 @@ export default function AdminProductsIndex({ products, filters }: Props) {
                         <option value="live">Live</option>
                         <option value="draft">Draft</option>
                     </select>
-                    <Button type="submit" variant="outline">
+                    <select
+                        name="stock"
+                        defaultValue={filters.stock}
+                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
+                    >
+                        <option value="">All stock</option>
+                        <option value="low">Low stock</option>
+                    </select>
+                    <Button type="submit" variant="outline" disabled={loading}>
                         Filter
                     </Button>
                 </form>
@@ -77,7 +94,20 @@ export default function AdminProductsIndex({ products, filters }: Props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {products.data.map((product) => (
+                            {(loading || products.data.length === 0) && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-4 py-16 text-center text-muted-foreground"
+                                    >
+                                        {loading
+                                            ? null
+                                            : 'No products match these filters.'}
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading &&
+                                products.data.map((product) => (
                                 <tr key={product.id} className="border-t">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
@@ -149,8 +179,10 @@ export default function AdminProductsIndex({ products, filters }: Props) {
                         </tbody>
                     </table>
                 </div>
-                <PaginationLinks paginator={products} />
+                {!loading && <PaginationLinks paginator={products} />}
             </div>
+
+            <PageLoadingModal open={loading} title="Loading products" />
         </>
     );
 }

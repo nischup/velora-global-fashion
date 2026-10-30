@@ -9,6 +9,7 @@ enum OrderStatus: string
     case Shipped = 'shipped';
     case Delivered = 'delivered';
     case Cancelled = 'cancelled';
+    case Refunded = 'refunded';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum OrderStatus: string
             self::Shipped => 'Shipped',
             self::Delivered => 'Delivered',
             self::Cancelled => 'Cancelled',
+            self::Refunded => 'Refunded',
         };
     }
 

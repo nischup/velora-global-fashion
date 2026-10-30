@@ -13,6 +13,13 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    --color-velora-cream: #f7f1e4;
+    --color-velora-ivory: #fbf7ef;
+    --color-velora-green: #0d3b2e;
+    --color-velora-forest: #164a38;
+    --color-velora-gold: #c4a15a;
+    --color-velora-gold-soft: #e6d5a8;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -87,14 +94,14 @@
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    --sidebar: #0a0a0a;
+    --sidebar-foreground: #f7f1e4;
+    --sidebar-primary: #c4a15a;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #1c1810;
+    --sidebar-accent-foreground: #e6d5a8;
+    --sidebar-border: color-mix(in srgb, #c4a15a 28%, #0a0a0a);
+    --sidebar-ring: #c4a15a;
 }
 
 .dark {
@@ -122,14 +129,14 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    --sidebar: #0a0a0a;
+    --sidebar-foreground: #f7f1e4;
+    --sidebar-primary: #c4a15a;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #1c1810;
+    --sidebar-accent-foreground: #e6d5a8;
+    --sidebar-border: color-mix(in srgb, #c4a15a 28%, #0a0a0a);
+    --sidebar-ring: #c4a15a;
 }
 
 @layer base {
@@ -139,5 +146,70 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    .dashboard-stat-card {
+        animation: dashboard-card-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+
+    @keyframes dashboard-card-in {
+        from {
+            opacity: 0;
+            transform: translateY(0.75rem);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dashboard-stat-card {
+            animation: none;
+        }
+    }
+
+    [data-sidebar='sidebar'] {
+        background-color: #0a0a0a;
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.16) 0%,
+                rgba(255, 255, 255, 0.05) 12%,
+                rgba(255, 255, 255, 0.015) 28%,
+                transparent 46%
+            ),
+            linear-gradient(
+                165deg,
+                rgba(196, 161, 90, 0.16) 0%,
+                rgba(196, 161, 90, 0.04) 32%,
+                transparent 58%
+            );
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.18),
+            inset 0 -1px 0 rgba(196, 161, 90, 0.12);
+    }
+}
+
+@media print {
+    [data-slot='sidebar'],
+    [data-slot='sidebar-gap'],
+    .app-sidebar-header,
+    .print\:hidden {
+        display: none !important;
+    }
+
+    [data-slot='sidebar-wrapper'],
+    [data-slot='sidebar-inset'] {
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-width: none !important;
+        overflow: visible !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
     }
 }

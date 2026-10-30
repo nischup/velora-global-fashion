@@ -274,6 +274,7 @@ class CatalogSeeder extends Seeder
 
             $variant = $product->variants()->create([
                 'sku' => strtoupper('VEL-'.$product->id.'-'.$size.'-'.Str::slug($color).'-'.$index),
+                'barcode' => '890'.str_pad((string) (($product->id * 100) + $index), 10, '0', STR_PAD_LEFT),
                 'price' => $price,
                 'compare_at_price' => $index === 0 ? $price + 1500 : null,
                 'stock' => $stock,

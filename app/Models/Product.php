@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProductStatus;
 use App\Models\Concerns\HasSlug;
+use App\Services\CatalogSaleService;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -129,6 +130,40 @@ class Product extends Model
     /**
      * @return array<string, mixed>
      */
+    public function toPosCard(): array
+    {
+        $variants = $this->variants
+            ->where('is_active', true)
+            ->map(function (ProductVariant $variant): array {
+                $quote = app(CatalogSaleService::class)->quote($variant);
+
+                return [
+                    'id' => $variant->id,
+                    'sku' => $variant->sku,
+                    'barcode' => $variant->barcode,
+                    'price' => $quote['price'],
+                    'compare_at_price' => $quote['compare_at_price'],
+                    'sale_percent' => $quote['sale_percent'],
+                    'stock' => $variant->stock,
+                    'label' => $variant->optionLabel(),
+                    'in_stock' => $variant->inStock(),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'image_url' => $this->coverImageUrl(),
+            'brand' => $this->brand?->name,
+            'variants' => $variants,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toAdminListArray(): array
     {
         $variants = $this->variants;
@@ -155,7 +190,9 @@ class Product extends Model
     public function toStorefrontCard(): array
     {
         $activeVariants = $this->variants->where('is_active', true);
-        $prices = $activeVariants->map(fn (ProductVariant $variant) => (float) $variant->price);
+        $quotes = $activeVariants->map(fn (ProductVariant $variant) => app(CatalogSaleService::class)->quote($variant));
+        $prices = $quotes->map(fn (array $quote) => $quote['price']);
+        $salePercent = $quotes->pluck('sale_percent')->filter()->max();
 
         return [
             'id' => $this->id,
@@ -167,6 +204,8 @@ class Product extends Model
             'image_url' => $this->coverImageUrl(),
             'min_price' => $prices->min() ?: 0,
             'max_price' => $prices->max() ?: 0,
+            'compare_at_price' => $quotes->pluck('compare_at_price')->filter()->max() ?: null,
+            'sale_percent' => $salePercent !== null ? (int) $salePercent : null,
             'in_stock' => $activeVariants->sum('stock') > 0,
             'is_featured' => $this->is_featured,
         ];

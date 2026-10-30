@@ -11,6 +11,8 @@ class CartService
 {
     public const SESSION_KEY = 'cart';
 
+    public function __construct(private readonly CatalogSaleService $sales) {}
+
     /**
      * @return array<int, int>
      */
@@ -120,7 +122,8 @@ class CartService
             }
 
             $validContents[$variantId] = $quantity;
-            $price = (float) $variant->price;
+            $quote = $this->sales->quote($variant);
+            $price = $quote['price'];
 
             $items[] = [
                 'variant_id' => $variant->id,
@@ -132,6 +135,8 @@ class CartService
                 'options' => $variant->optionLabel(),
                 'image_url' => $variant->product->coverImageUrl(),
                 'price' => $price,
+                'compare_at_price' => $quote['compare_at_price'],
+                'sale_percent' => $quote['sale_percent'],
                 'quantity' => $quantity,
                 'stock' => $variant->stock,
                 'in_stock' => $variant->inStock() && $quantity <= $variant->stock,

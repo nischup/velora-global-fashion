@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
 use App\Models\Order;
@@ -14,7 +15,10 @@ use Throwable;
 
 class CheckoutService
 {
-    public function __construct(private readonly CartService $cart) {}
+    public function __construct(
+        private readonly CartService $cart,
+        private readonly CatalogSaleService $sales,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $shipping
@@ -52,7 +56,8 @@ class CheckoutService
                     ]);
                 }
 
-                $lineTotal = (float) $variant->price * $item['quantity'];
+                $unitPrice = $this->sales->sellingPrice($variant);
+                $lineTotal = $unitPrice * $item['quantity'];
                 $subtotal += $lineTotal;
 
                 $orderItems[] = [
@@ -61,7 +66,7 @@ class CheckoutService
                     'product_name' => $variant->product->name,
                     'variant_sku' => $variant->sku,
                     'variant_label' => $variant->optionLabel(),
-                    'unit_price' => $variant->price,
+                    'unit_price' => $unitPrice,
                     'quantity' => $item['quantity'],
                     'line_total' => $lineTotal,
                 ];
@@ -73,9 +78,12 @@ class CheckoutService
                 'user_id' => $user->id,
                 'number' => Order::generateNumber(),
                 'status' => OrderStatus::Pending,
+                'source' => OrderSource::Online,
                 'subtotal' => $subtotal,
                 'shipping_amount' => 0,
+                'discount_amount' => 0,
                 'total' => $subtotal,
+                'refunded_amount' => 0,
                 'shipping_name' => (string) $shipping['shipping_name'],
                 'shipping_phone' => (string) $shipping['shipping_phone'],
                 'shipping_address' => (string) $shipping['shipping_address'],
@@ -96,7 +104,7 @@ class CheckoutService
             return $order;
         }
 
-        if ($order->status === OrderStatus::Cancelled || $order->status === OrderStatus::Delivered) {
+        if (in_array($order->status, [OrderStatus::Cancelled, OrderStatus::Delivered, OrderStatus::Refunded], true)) {
             throw ValidationException::withMessages([
                 'status' => 'This order can no longer be updated.',
             ]);
@@ -107,10 +115,12 @@ class CheckoutService
                 $order->load('items');
 
                 foreach ($order->items as $item) {
-                    if ($item->product_variant_id) {
+                    $restore = $item->returnableQuantity();
+
+                    if ($item->product_variant_id && $restore > 0) {
                         ProductVariant::query()
                             ->whereKey($item->product_variant_id)
-                            ->increment('stock', $item->quantity);
+                            ->increment('stock', $restore);
                     }
                 }
             }

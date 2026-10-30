@@ -8,10 +8,13 @@ use App\Models\ProductVariant;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ProductCatalogService
 {
+    public function __construct(private readonly BarcodeService $barcodes) {}
+
     /**
      * @param  UploadedFile|array<int, UploadedFile>|null  $images
      * @return array<int, UploadedFile>
@@ -96,9 +99,11 @@ class ProductCatalogService
      */
     public function createVariant(Product $product, array $data): ProductVariant
     {
+        $data = $this->resolveVariantCodes($data);
         $attributeValueIds = $this->normalizedAttributeIds($data);
 
         $this->assertUniqueSku((string) $data['sku']);
+        $this->assertUniqueBarcode($data['barcode'] ?? null);
         $this->assertUniqueAttributeCombination($product, $attributeValueIds);
 
         return DB::transaction(function () use ($product, $data, $attributeValueIds): ProductVariant {
@@ -116,9 +121,11 @@ class ProductCatalogService
     {
         abort_unless($variant->product_id === $product->id, 404);
 
+        $data = $this->resolveVariantCodes($data, $variant);
         $attributeValueIds = $this->normalizedAttributeIds($data);
 
         $this->assertUniqueSku((string) $data['sku'], $variant->id);
+        $this->assertUniqueBarcode($data['barcode'] ?? null, $variant->id);
         $this->assertUniqueAttributeCombination($product, $attributeValueIds, $variant->id);
 
         $variant->update($this->variantAttributes($data));
@@ -165,10 +172,38 @@ class ProductCatalogService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
+    private function resolveVariantCodes(array $data, ?ProductVariant $existing = null): array
+    {
+        $data['sku'] = filled($data['sku'] ?? null)
+            ? (string) $data['sku']
+            : ($existing?->sku ?: $this->generateUniqueSku());
+        $data['barcode'] = filled($data['barcode'] ?? null)
+            ? (string) $data['barcode']
+            : ($existing?->barcode ?: $this->barcodes->generateUnique());
+
+        return $data;
+    }
+
+    private function generateUniqueSku(): string
+    {
+        do {
+            $sku = 'VEL-'.strtoupper(Str::random(8));
+        } while (ProductVariant::query()->where('sku', $sku)->exists());
+
+        return $sku;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     private function variantAttributes(array $data): array
     {
+        $data = $this->resolveVariantCodes($data);
+
         return [
             'sku' => $data['sku'],
+            'barcode' => $data['barcode'],
             'price' => $data['price'],
             'compare_at_price' => $data['compare_at_price'] ?? null,
             'stock' => $data['stock'],
@@ -202,7 +237,12 @@ class ProductCatalogService
     private function syncVariants(Product $product, array $variants): void
     {
         foreach ($variants as $variantData) {
-            if (blank($variantData['sku'] ?? null)) {
+            if (
+                blank($variantData['sku'] ?? null)
+                && blank($variantData['price'] ?? null)
+                && blank($variantData['size_id'] ?? null)
+                && blank($variantData['color_id'] ?? null)
+            ) {
                 continue;
             }
 
@@ -252,6 +292,24 @@ class ProductCatalogService
         if ($exists) {
             throw ValidationException::withMessages([
                 'attribute_value_ids' => 'A variant with this size and color already exists.',
+            ]);
+        }
+    }
+
+    private function assertUniqueBarcode(mixed $barcode, ?int $ignoreVariantId = null): void
+    {
+        if (blank($barcode)) {
+            return;
+        }
+
+        $exists = ProductVariant::query()
+            ->where('barcode', (string) $barcode)
+            ->when($ignoreVariantId, fn ($query) => $query->whereKeyNot($ignoreVariantId))
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'barcode' => 'This barcode is already in use.',
             ]);
         }
     }

@@ -1,10 +1,12 @@
 import { Form, Head, router, useForm } from '@inertiajs/react';
 import Heading from '@/components/heading';
+import ImageUploadField from '@/components/image-upload-field';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import ProductImageController from '@/actions/App/Http/Controllers/Admin/ProductImageController';
@@ -32,8 +34,12 @@ export default function AdminProductsEdit({
     sizes,
     colors,
 }: Props) {
+    const imageForm = useForm({
+        images: [] as File[],
+    });
     const variantForm = useForm({
         sku: '',
+        barcode: '',
         price: '',
         stock: '0',
         low_stock_threshold: '5',
@@ -185,21 +191,39 @@ export default function AdminProductsEdit({
                             </div>
                         ))}
                     </div>
-                    <Form
-                        {...ProductImageController.store.form(product.id)}
-                        encType="multipart/form-data"
-                        className="flex items-end gap-3"
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            imageForm.post(
+                                ProductImageController.store.url(product.id),
+                                {
+                                    forceFormData: true,
+                                    preserveScroll: true,
+                                    onSuccess: () => imageForm.reset(),
+                                },
+                            );
+                        }}
+                        className="space-y-3"
                     >
-                        {({ processing }) => (
-                            <>
-                                <div className="grid flex-1 gap-2">
-                                    <Label htmlFor="images">Upload</Label>
-                                    <Input id="images" name="images[]" type="file" multiple accept="image/*" />
-                                </div>
-                                <Button disabled={processing}>Upload</Button>
-                            </>
-                        )}
-                    </Form>
+                        <ImageUploadField
+                            label="Upload"
+                            files={imageForm.data.images}
+                            onChange={(images) =>
+                                imageForm.setData('images', images)
+                            }
+                            uploading={imageForm.processing}
+                            error={imageForm.errors.images}
+                        />
+                        <Button
+                            disabled={
+                                imageForm.processing ||
+                                imageForm.data.images.length === 0
+                            }
+                        >
+                            {imageForm.processing && <Spinner />}
+                            Upload
+                        </Button>
+                    </form>
                 </section>
 
                 <section className="space-y-4 rounded-xl border p-6">
@@ -209,6 +233,7 @@ export default function AdminProductsEdit({
                             <thead className="text-left">
                                 <tr>
                                     <th className="py-2">SKU</th>
+                                    <th className="py-2">Barcode</th>
                                     <th className="py-2">Options</th>
                                     <th className="py-2">Price</th>
                                     <th className="py-2">Stock</th>
@@ -219,6 +244,9 @@ export default function AdminProductsEdit({
                                 {product.variants.map((variant) => (
                                     <tr key={variant.id} className="border-t">
                                         <td className="py-2">{variant.sku}</td>
+                                        <td className="py-2">
+                                            {variant.barcode ?? '—'}
+                                        </td>
                                         <td className="py-2">
                                             {variant.label}
                                             {variant.is_low_stock && (
@@ -284,13 +312,23 @@ export default function AdminProductsEdit({
                                 ProductVariantController.store.url(product.id),
                             );
                         }}
-                        className="grid gap-2 rounded-lg border p-3 md:grid-cols-6"
+                        className="grid gap-2 rounded-lg border p-3 md:grid-cols-7"
                     >
                         <Input
                             placeholder="SKU"
                             value={variantForm.data.sku}
                             onChange={(event) =>
                                 variantForm.setData('sku', event.target.value)
+                            }
+                        />
+                        <Input
+                            placeholder="Barcode (auto)"
+                            value={variantForm.data.barcode}
+                            onChange={(event) =>
+                                variantForm.setData(
+                                    'barcode',
+                                    event.target.value,
+                                )
                             }
                         />
                         <Input

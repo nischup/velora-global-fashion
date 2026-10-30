@@ -1,31 +1,51 @@
-// Components
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Form, Link } from '@inertiajs/react';
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
+import {
+    AuthBrandLayout,
+    authFieldClass,
+    authLabelClass,
+} from '@/layouts/auth/auth-brand-layout';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     return (
-        <>
-            <Head title="Forgot password" />
+        <AuthBrandLayout
+            title="Forgot password"
+            heading="Reset your password"
+            description="Enter the email on your account and we will send a reset link — considered clothing, considered access."
+        >
+            <div className="rounded-3xl border border-velora-gold/30 bg-velora-ivory p-6 shadow-[0_24px_60px_rgba(13,59,46,0.08)] sm:p-8">
+                <p className="text-[11px] tracking-[0.22em] text-velora-gold uppercase">
+                    Membership
+                </p>
+                <h2 className="mt-2 text-2xl tracking-tight">
+                    Forgot password
+                </h2>
+                <p className="mt-1 text-sm text-velora-forest/65">
+                    Enter your email to receive a password reset link.
+                </p>
 
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+                {status && (
+                    <p className="mt-4 text-center text-sm font-medium text-velora-forest">
+                        {status}
+                    </p>
+                )}
 
-            <div className="space-y-6">
-                <Form {...email.form()}>
+                <Form {...email.form()} className="mt-8 flex flex-col gap-5">
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label
+                                    htmlFor="email"
+                                    className={authLabelClass}
+                                >
+                                    Email address
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -33,37 +53,33 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                     autoComplete="off"
                                     autoFocus
                                     placeholder="email@example.com"
+                                    className={authFieldClass}
                                 />
-
                                 <InputError message={errors.email} />
                             </div>
 
-                            <div className="my-6 flex items-center justify-start">
-                                <Button
-                                    className="w-full"
-                                    disabled={processing}
-                                    data-test="email-password-reset-link-button"
-                                >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
-                                    Email password reset link
-                                </Button>
-                            </div>
+                            <Button
+                                className="mt-2 h-11 w-full bg-velora-green text-velora-cream hover:bg-velora-forest"
+                                disabled={processing}
+                                data-test="email-password-reset-link-button"
+                            >
+                                {processing && <Spinner />}
+                                Email password reset link
+                            </Button>
                         </>
                     )}
                 </Form>
-
-                <div className="space-x-1 text-center text-sm text-muted-foreground">
-                    <span>Or, return to</span>
-                    <TextLink href={login()}>log in</TextLink>
-                </div>
             </div>
-        </>
+
+            <p className="mt-6 text-center text-sm text-velora-forest/70">
+                Or, return to{' '}
+                <Link
+                    href={login()}
+                    className="font-medium text-velora-green underline decoration-velora-gold/50 underline-offset-4 hover:text-velora-gold"
+                >
+                    log in
+                </Link>
+            </p>
+        </AuthBrandLayout>
     );
 }
-
-ForgotPassword.layout = {
-    title: 'Forgot password',
-    description: 'Enter your email to receive a password reset link',
-};

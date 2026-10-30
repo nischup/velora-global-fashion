@@ -17,6 +17,13 @@ void createInertiaApp({
             case name.startsWith('account/'):
                 return StorefrontLayout;
             case name === 'welcome':
+            case name === 'auth/login':
+            case name === 'auth/register':
+            case name === 'auth/forgot-password':
+            case name === 'auth/verify-email':
+            case name === 'admin/pos/receipt':
+            case name === 'admin/barcodes/print':
+            case name === 'admin/orders/invoice':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

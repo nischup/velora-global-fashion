@@ -1,9 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
-import { AccountNav } from '@/components/account-nav';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { AccountEmpty, AccountShell } from '@/components/account-shell';
 import { ProductCard } from '@/components/product-card';
-import { Button } from '@/components/ui/button';
 import { index as shopIndex } from '@/routes/shop';
-import { usePage } from '@inertiajs/react';
 import type { ProductCard as ProductCardType } from '@/types';
 
 type Props = {
@@ -17,24 +15,27 @@ export default function WishlistPage({ products }: Props) {
         <>
             <Head title="Wishlist" />
 
-            <div className="mx-auto max-w-6xl px-4 py-10">
-                {auth.user && (
-                    <div className="mb-8">
-                        <AccountNav />
-                    </div>
-                )}
-                <p className="text-xs tracking-[0.22em] uppercase">Saved</p>
-                <h1 className="mt-2 text-3xl tracking-tight">Wishlist</h1>
+            <AccountShell showNav={Boolean(auth.user)}>
+                <p className="mt-8 text-[11px] tracking-[0.22em] text-velora-gold uppercase">
+                    Saved
+                </p>
+                <h1 className="mt-2 text-3xl tracking-tight text-velora-green">
+                    Wishlist
+                </h1>
 
                 {products.length === 0 ? (
-                    <div className="mt-10 space-y-4">
-                        <p className="text-muted-foreground">
-                            Nothing saved yet.
-                        </p>
-                        <Button asChild>
-                            <Link href={shopIndex()}>Browse the shop</Link>
-                        </Button>
-                    </div>
+                    <AccountEmpty
+                        action={
+                            <Link
+                                href={shopIndex()}
+                                className="inline-flex h-11 items-center bg-velora-green px-6 text-xs tracking-[0.18em] text-velora-cream uppercase"
+                            >
+                                Browse the shop
+                            </Link>
+                        }
+                    >
+                        Nothing saved yet.
+                    </AccountEmpty>
                 ) : (
                     <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {products.map((product) => (
@@ -42,7 +43,7 @@ export default function WishlistPage({ products }: Props) {
                         ))}
                     </div>
                 )}
-            </div>
+            </AccountShell>
         </>
     );
 }

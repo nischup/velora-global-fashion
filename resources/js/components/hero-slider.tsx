@@ -59,7 +59,7 @@ export function HeroSlider({ slides }: Props) {
 
     return (
         <section
-            className="relative overflow-hidden border-b bg-neutral-950 text-white"
+            className="relative overflow-hidden border-b border-velora-gold/30 bg-velora-green text-velora-cream"
             aria-roledescription="carousel"
             aria-label="New season"
             onMouseEnter={() => setPaused(true)}
@@ -88,15 +88,15 @@ export function HeroSlider({ slides }: Props) {
                                     className="size-full object-cover"
                                 />
                             ) : (
-                                <div className="size-full bg-neutral-900" />
+                                <div className="size-full bg-velora-green bg-[radial-gradient(circle_at_70%_40%,rgba(196,161,90,0.28),transparent_58%)]" />
                             )}
-                            <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/35 to-black/10" />
+                            <div className="absolute inset-0 bg-linear-to-r from-velora-green/88 via-velora-green/45 to-velora-green/10" />
                             <div className="absolute inset-0 z-10 mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 md:justify-center md:pb-0">
-                                <p className="text-xs tracking-[0.28em] uppercase">
+                                <p className="text-xs tracking-[0.28em] text-velora-gold uppercase">
                                     New season
                                 </p>
                                 {item.brand && (
-                                    <p className="mt-4 text-[11px] tracking-[0.2em] text-white/70 uppercase">
+                                    <p className="mt-4 text-[11px] tracking-[0.2em] text-velora-gold-soft uppercase">
                                         {item.brand}
                                     </p>
                                 )}
@@ -104,14 +104,14 @@ export function HeroSlider({ slides }: Props) {
                                     {item.title}
                                 </h1>
                                 {item.description && (
-                                    <p className="mt-4 max-w-xl text-white/80">
+                                    <p className="mt-4 max-w-xl text-velora-cream/75">
                                         {item.description}
                                     </p>
                                 )}
                                 <div className="mt-8">
                                     <Link
                                         href={href}
-                                        className="inline-flex h-11 items-center bg-white px-6 text-sm tracking-[0.18em] text-neutral-950 uppercase"
+                                        className="inline-flex h-11 items-center bg-velora-cream px-6 text-sm tracking-[0.18em] text-velora-green uppercase transition hover:bg-velora-gold-soft"
                                         tabIndex={active ? 0 : -1}
                                     >
                                         Shop the collection
@@ -126,7 +126,7 @@ export function HeroSlider({ slides }: Props) {
                     <>
                         <button
                             type="button"
-                            className="absolute top-1/2 left-3 z-30 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 md:left-6"
+                            className="absolute top-1/2 left-3 z-30 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-velora-gold/40 bg-velora-green/40 text-velora-cream backdrop-blur-sm hover:bg-velora-green/70 md:left-6"
                             onClick={() => goTo(current - 1)}
                             aria-label="Previous slide"
                         >
@@ -134,7 +134,7 @@ export function HeroSlider({ slides }: Props) {
                         </button>
                         <button
                             type="button"
-                            className="absolute top-1/2 right-3 z-30 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 md:right-6"
+                            className="absolute top-1/2 right-3 z-30 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-velora-gold/40 bg-velora-green/40 text-velora-cream backdrop-blur-sm hover:bg-velora-green/70 md:right-6"
                             onClick={() => goTo(current + 1)}
                             aria-label="Next slide"
                         >
@@ -148,8 +148,8 @@ export function HeroSlider({ slides }: Props) {
                                     className={cn(
                                         'h-1.5 rounded-full transition-all',
                                         index === current
-                                            ? 'w-8 bg-white'
-                                            : 'w-2.5 bg-white/40 hover:bg-white/70',
+                                            ? 'w-8 bg-velora-gold'
+                                            : 'w-2.5 bg-velora-cream/40 hover:bg-velora-gold-soft',
                                     )}
                                     onClick={() => goTo(index)}
                                     aria-label={`Go to slide ${index + 1}`}

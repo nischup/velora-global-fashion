@@ -114,6 +114,42 @@ class ShopCommerceTest extends TestCase
             ->assertSee('Welcome back');
     }
 
+    public function test_admin_orders_default_to_today_and_can_filter_by_date_range(): void
+    {
+        $this->freezeTime();
+
+        $admin = User::factory()->admin()->create();
+        $today = Order::factory()->create(['number' => 'VGF-TODAY-1']);
+        $yesterday = Order::factory()->create(['number' => 'VGF-YDAY-1']);
+        $yesterday->forceFill([
+            'created_at' => now()->subDay()->setTime(12, 0),
+            'updated_at' => now()->subDay()->setTime(12, 0),
+        ])->saveQuietly();
+
+        $this->actingAs($admin)
+            ->get(route('admin.orders.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/orders/index')
+                ->where('filters.from', now()->toDateString())
+                ->where('filters.to', now()->toDateString())
+                ->has('orders.data', 1)
+                ->where('orders.data.0.number', $today->number));
+
+        $this->actingAs($admin)
+            ->get('/admin/orders?'.http_build_query([
+                'from' => now()->subDay()->toDateString(),
+                'to' => now()->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.from', now()->subDay()->toDateString())
+                ->where('filters.to', now()->toDateString())
+                ->has('orders.data', 2)
+                ->where('orders.data.0.number', $today->number)
+                ->where('orders.data.1.number', $yesterday->number));
+    }
+
     public function test_admins_can_manage_orders_in_the_admin_panel(): void
     {
         $admin = User::factory()->admin()->create();
@@ -132,6 +168,53 @@ class ShopCommerceTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(OrderStatus::Processing, $order->fresh()?->status);
+    }
+
+    public function test_admins_can_bulk_update_open_orders(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $first = Order::factory()->create(['status' => OrderStatus::Pending]);
+        $second = Order::factory()->create(['status' => OrderStatus::Pending]);
+        $closed = Order::factory()->create(['status' => OrderStatus::Delivered]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.orders.bulk'), [
+                'order_ids' => [$first->id, $second->id, $closed->id],
+                'status' => OrderStatus::Processing->value,
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(OrderStatus::Processing, $first->fresh()?->status);
+        $this->assertSame(OrderStatus::Processing, $second->fresh()?->status);
+        $this->assertSame(OrderStatus::Delivered, $closed->fresh()?->status);
+    }
+
+    public function test_admin_can_print_an_online_order_invoice(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $order = Order::factory()->create();
+        OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_name' => 'Cotton Safari Jacket',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.orders.invoice', $order))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/orders/invoice')
+                ->where('order.number', $order->number)
+                ->where('order.items.0.product_name', 'Cotton Safari Jacket'));
+    }
+
+    public function test_customers_cannot_print_admin_invoices(): void
+    {
+        $customer = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $customer->id]);
+
+        $this->actingAs($customer)
+            ->get(route('admin.orders.invoice', $order))
+            ->assertForbidden();
     }
 
     public function test_new_registrations_are_customers(): void

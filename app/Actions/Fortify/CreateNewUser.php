@@ -25,11 +25,17 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
             'role' => UserRole::Customer,
         ]);
+
+        if (config('fortify.auto_verify_email')) {
+            $user->markEmailAsVerified();
+        }
+
+        return $user;
     }
 }

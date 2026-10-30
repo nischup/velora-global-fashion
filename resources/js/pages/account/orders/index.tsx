@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { AccountNav } from '@/components/account-nav';
 import { PaginationLinks } from '@/components/pagination-links';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+    AccountEmpty,
+    AccountShell,
+    orderStatusClass,
+} from '@/components/account-shell';
 import { formatPrice } from '@/lib/utils';
 import { show as accountOrder } from '@/routes/account/orders';
 import { index as shopIndex } from '@/routes/shop';
@@ -17,26 +19,31 @@ export default function AccountOrdersIndex({ orders }: Props) {
         <>
             <Head title="My orders" />
 
-            <div className="mx-auto max-w-6xl px-4 py-10">
-                <AccountNav />
-                <p className="mt-8 text-xs tracking-[0.22em] uppercase">
+            <AccountShell>
+                <p className="mt-8 text-[11px] tracking-[0.22em] text-velora-gold uppercase">
                     Orders
                 </p>
-                <h1 className="mt-2 text-3xl tracking-tight">Your orders</h1>
+                <h1 className="mt-2 text-3xl tracking-tight text-velora-green">
+                    Your orders
+                </h1>
 
                 {orders.data.length === 0 ? (
-                    <div className="mt-10 space-y-4">
-                        <p className="text-muted-foreground">
-                            No orders yet.
-                        </p>
-                        <Button asChild>
-                            <Link href={shopIndex()}>Browse the shop</Link>
-                        </Button>
-                    </div>
+                    <AccountEmpty
+                        action={
+                            <Link
+                                href={shopIndex()}
+                                className="inline-flex h-11 items-center bg-velora-green px-6 text-xs tracking-[0.18em] text-velora-cream uppercase"
+                            >
+                                Browse the shop
+                            </Link>
+                        }
+                    >
+                        No orders yet.
+                    </AccountEmpty>
                 ) : (
-                    <div className="mt-8 overflow-x-auto border">
+                    <div className="mt-8 overflow-x-auto rounded-2xl border border-velora-gold/25 bg-velora-ivory">
                         <table className="w-full text-sm">
-                            <thead className="bg-muted/50 text-left">
+                            <thead className="bg-velora-green text-left text-velora-cream">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">
                                         Order
@@ -57,29 +64,34 @@ export default function AccountOrdersIndex({ orders }: Props) {
                             </thead>
                             <tbody>
                                 {orders.data.map((order) => (
-                                    <tr key={order.id} className="border-t">
+                                    <tr
+                                        key={order.id}
+                                        className="border-t border-velora-gold/20"
+                                    >
                                         <td className="px-4 py-3">
                                             <Link
                                                 href={accountOrder(
                                                     order.number,
                                                 )}
-                                                className="underline-offset-4 hover:underline"
+                                                className="font-medium underline-offset-4 hover:text-velora-forest hover:underline"
                                             >
                                                 {order.number}
                                             </Link>
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground">
+                                        <td className="px-4 py-3 text-velora-forest/65">
                                             {order.placed_at}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge variant="outline">
+                                            <span
+                                                className={`rounded-full border px-3 py-1 text-[11px] tracking-[0.14em] uppercase ${orderStatusClass(order.status)}`}
+                                            >
                                                 {order.status_label}
-                                            </Badge>
+                                            </span>
                                         </td>
                                         <td className="px-4 py-3">
                                             {order.item_count}
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right font-medium">
                                             {formatPrice(order.total)}
                                         </td>
                                     </tr>
@@ -92,7 +104,7 @@ export default function AccountOrdersIndex({ orders }: Props) {
                 <div className="mt-6">
                     <PaginationLinks paginator={orders} />
                 </div>
-            </div>
+            </AccountShell>
         </>
     );
 }

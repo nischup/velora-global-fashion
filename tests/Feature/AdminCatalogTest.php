@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminCatalogTest extends TestCase
@@ -91,6 +92,80 @@ class AdminCatalogTest extends TestCase
             'stock' => 8,
         ]);
         $this->assertDatabaseCount('product_images', 1);
+    }
+
+    public function test_admin_can_create_a_product_without_sku_or_barcode(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::factory()->create();
+        [$size, $color] = $this->sizeAndColor();
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), [
+                'name' => 'Poplin Camp Shirt',
+                'category_id' => $category->id,
+                'status' => ProductStatus::Live->value,
+                'variants' => [
+                    [
+                        'sku' => '',
+                        'barcode' => '',
+                        'price' => 7200,
+                        'stock' => 6,
+                        'size_id' => $size->id,
+                        'color_id' => $color->id,
+                    ],
+                ],
+            ])
+            ->assertRedirect();
+
+        $product = Product::query()->where('name', 'Poplin Camp Shirt')->first();
+
+        $this->assertNotNull($product);
+        $this->assertDatabaseCount('product_variants', 1);
+        $this->assertNotNull($product->variants()->first()?->sku);
+        $this->assertNotNull($product->variants()->first()?->barcode);
+    }
+
+    public function test_admin_can_filter_products_by_low_stock(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $low = Product::factory()->create(['name' => 'Low Stock Coat']);
+        ProductVariant::factory()->create([
+            'product_id' => $low->id,
+            'stock' => 1,
+            'low_stock_threshold' => 5,
+        ]);
+        $healthy = Product::factory()->create(['name' => 'Healthy Stock Shirt']);
+        ProductVariant::factory()->create([
+            'product_id' => $healthy->id,
+            'stock' => 20,
+            'low_stock_threshold' => 5,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.products.index', ['stock' => 'low']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/products/index')
+                ->has('products.data', 1)
+                ->where('products.data.0.name', 'Low Stock Coat')
+                ->where('filters.stock', 'low'));
+    }
+
+    public function test_admin_can_filter_products_by_live_status(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Product::factory()->create(['name' => 'Live Dress', 'status' => ProductStatus::Live]);
+        Product::factory()->draft()->create(['name' => 'Draft Coat']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.products.index', ['status' => 'live']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/products/index')
+                ->has('products.data', 1)
+                ->where('products.data.0.name', 'Live Dress')
+                ->where('filters.status', 'live'));
     }
 
     public function test_admin_can_update_variant_stock(): void

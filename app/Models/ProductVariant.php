@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CatalogSaleService;
 use Database\Factories\ProductVariantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $product_id
  * @property string $sku
+ * @property string|null $barcode
  * @property numeric-string $price
  * @property numeric-string|null $compare_at_price
  * @property int $stock
@@ -26,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property-read Product $product
  * @property-read Collection<int, ProductAttributeValue> $attributeValues
  */
-#[Fillable(['product_id', 'sku', 'price', 'compare_at_price', 'stock', 'low_stock_threshold', 'is_active'])]
+#[Fillable(['product_id', 'sku', 'barcode', 'price', 'compare_at_price', 'stock', 'low_stock_threshold', 'is_active'])]
 class ProductVariant extends Model
 {
     /** @use HasFactory<ProductVariantFactory> */
@@ -112,6 +114,7 @@ class ProductVariant extends Model
         return [
             'id' => $this->id,
             'sku' => $this->sku,
+            'barcode' => $this->barcode,
             'price' => (float) $this->price,
             'compare_at_price' => $this->compare_at_price !== null ? (float) $this->compare_at_price : null,
             'stock' => $this->stock,
@@ -133,12 +136,14 @@ class ProductVariant extends Model
     public function toStorefrontArray(): array
     {
         $values = $this->attributeValues;
+        $quote = app(CatalogSaleService::class)->quote($this);
 
         return [
             'id' => $this->id,
             'sku' => $this->sku,
-            'price' => (float) $this->price,
-            'compare_at_price' => $this->compare_at_price !== null ? (float) $this->compare_at_price : null,
+            'price' => $quote['price'],
+            'compare_at_price' => $quote['compare_at_price'],
+            'sale_percent' => $quote['sale_percent'],
             'stock' => $this->stock,
             'in_stock' => $this->inStock(),
             'is_low_stock' => $this->isLowStock(),

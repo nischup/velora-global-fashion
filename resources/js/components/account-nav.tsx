@@ -18,7 +18,7 @@ export function AccountNav() {
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <nav className="flex flex-wrap items-center gap-2 border-b pb-4 text-xs tracking-[0.18em] uppercase">
+        <nav className="flex flex-wrap items-center gap-2 border-b border-velora-gold/30 pb-4 text-xs tracking-[0.18em] uppercase">
             {links.map((link) => {
                 const active =
                     link.title === 'Overview'
@@ -30,8 +30,9 @@ export function AccountNav() {
                         key={link.title}
                         href={link.href}
                         className={cn(
-                            'px-3 py-2 hover:bg-muted',
-                            active && 'bg-neutral-950 text-white',
+                            'rounded-full px-4 py-2 text-velora-forest/70 transition-colors hover:bg-velora-green/8 hover:text-velora-green',
+                            active &&
+                                'bg-velora-green text-velora-cream hover:bg-velora-forest hover:text-velora-cream',
                         )}
                     >
                         {link.title}
@@ -42,7 +43,7 @@ export function AccountNav() {
                 href={logout()}
                 method="post"
                 as="button"
-                className="ml-auto px-3 py-2 hover:bg-muted"
+                className="ml-auto rounded-full px-4 py-2 text-velora-forest/70 transition-colors hover:bg-velora-gold/20 hover:text-velora-green"
             >
                 Log out
             </Link>

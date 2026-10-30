@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\HeroSlide;
 use App\Models\Product;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,21 +28,26 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $slideSource = $featuredProducts->isNotEmpty()
-            ? $featuredProducts
-            : $latestProducts;
+        $heroSlides = HeroSlide::query()
+            ->active()
+            ->with('product')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
 
-        $slides = $slideSource
-            ->take(5)
-            ->map(fn (Product $product) => [
-                'id' => $product->id,
-                'title' => $product->name,
-                'description' => $product->short_description,
-                'image_url' => $product->coverImageUrl(),
-                'slug' => $product->slug,
-                'brand' => $product->brand?->name,
-            ])
-            ->values();
+        $slides = $heroSlides->isNotEmpty()
+            ? $heroSlides->map(fn (HeroSlide $slide) => $slide->toStorefrontArray())->values()
+            : ($featuredProducts->isNotEmpty() ? $featuredProducts : $latestProducts)
+                ->take(5)
+                ->map(fn (Product $product) => [
+                    'id' => $product->id,
+                    'title' => $product->name,
+                    'description' => $product->short_description,
+                    'image_url' => $product->coverImageUrl(),
+                    'slug' => $product->slug,
+                    'brand' => $product->brand?->name,
+                ])
+                ->values();
 
         $featured = $featuredProducts
             ->map(fn (Product $product) => $product->toStorefrontCard())

@@ -56,6 +56,20 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         ];
     }
 
+    public function hasVerifiedEmail(): bool
+    {
+        if (config('fortify.auto_verify_email')) {
+            return true;
+        }
+
+        return parent::hasVerifiedEmail();
+    }
+
+    public function homePath(): string
+    {
+        return $this->isStaff() ? '/dashboard' : '/account';
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;

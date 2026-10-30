@@ -32,6 +32,9 @@ class ProductController extends Controller
                 });
             })
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->when($request->string('stock')->toString() === 'low', function ($query): void {
+                $query->whereHas('variants', fn ($variants) => $variants->lowStock());
+            })
             ->latest()
             ->paginate(12)
             ->withQueryString()
@@ -42,6 +45,7 @@ class ProductController extends Controller
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
+                'stock' => $request->string('stock')->toString(),
             ],
         ]);
     }

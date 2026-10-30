@@ -151,6 +151,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto-verify emails
+    |--------------------------------------------------------------------------
+    |
+    | When true, new accounts are marked verified immediately and the
+    | verified middleware is skipped. Turn this off before going live.
+    |
+    */
+
+    'auto_verify_email' => (bool) env('FORTIFY_AUTO_VERIFY_EMAIL', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Features
     |--------------------------------------------------------------------------
     |
